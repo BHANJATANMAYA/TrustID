@@ -19,39 +19,45 @@ A secure web application for anchoring and verifying government identity documen
 ## System Architecture
 
 ```mermaid
-architecture-beta
-    group frontend(cloud)[Frontend Layer]
-        service login(server)[Login Page] in frontend
-        service dashboard(server)[Dashboard] in frontend
-        service anchorform(server)[Anchor Form] in frontend
-        service i18n(server)[i18n EN / HI] in frontend
-    end
+flowchart TD
 
-    group backend(cloud)[Backend Layer — Node.js + Express]
-        service router(server)[Express Router] in backend
-        service controller(server)[Doc Controller] in backend
-        service hashgen(server)[Hash Generator] in backend
-        service validator(server)[Validator] in backend
-    end
+%% Frontend
+subgraph Frontend Layer
+    login[Login Page]
+    dashboard[Dashboard]
+    anchorform[Anchor Form]
+    i18n[i18n EN HI]
+end
 
-    group db(database)[PostgreSQL — identity_db]
-        service govdocs(database)[gov_documents] in db
-    end
+%% Backend
+subgraph Backend Layer Nodejs Express
+    router[Express Router]
+    controller[Doc Controller]
+    hashgen[Hash Generator]
+    validator[Validator]
+end
 
-    group blockchain(cloud)[Blockchain Layer — Hardhat]
-        service contract(server)[IdentityLedger.sol] in blockchain
-    end
+%% Database
+subgraph Database PostgreSQL
+    govdocs[gov_documents]
+end
 
-    login:R --> L:router
-    dashboard:R --> L:router
-    anchorform:R --> L:router
+%% Blockchain
+subgraph Blockchain Layer Hardhat
+    contract[IdentityLedger.sol]
+end
 
-    router:R --> L:controller
-    controller:R --> L:hashgen
-    controller:R --> L:validator
+%% Connections
+login --> router
+dashboard --> router
+anchorform --> router
 
-    controller:B --> T:govdocs
-    controller:B --> T:contract
+router --> controller
+controller --> hashgen
+controller --> validator
+
+controller --> govdocs
+controller --> contract
 ```
 
 **End-to-end flow:** User submits an identity document → Backend validates input → SHA-256 hash is computed → Record is saved to PostgreSQL → Hash is anchored on the Ethereum blockchain → Both layers can independently verify or revoke the document.
